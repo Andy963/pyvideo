@@ -34,3 +34,7 @@ def add_bg_ms(v_path, ms_path, out_path, v_start=0, v_end=None, ms_start=0, ms_e
         com_audio = CompositeAudioClip([video.audio, bg_ms])
         video.set_audio(com_audio)
     video.write_videofile(out_path)
+
+
+if __name__ == '__main__':
+    add_bg_ms('./62.mp4', './64.wav', './65.mp4')
