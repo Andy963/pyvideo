@@ -6,9 +6,9 @@ from functools import wraps
 
 from proglog import default_bar_logger
 
-CPU_COUNT = os.cpu_count()
+CPU_COUNT = os.cpu_count() // 2
 LOG = default_bar_logger('bar', bars=None, ignored_bars=None, logged_bars='all',
-                         min_time_interval=10, ignore_bars_under=0)
+                         min_time_interval=5, ignore_bars_under=0)
 
 
 def timer(func):

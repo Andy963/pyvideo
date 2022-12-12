@@ -7,8 +7,9 @@ def list_file(src_path='audio'):
     """列出所有的文件"""
     fs = []
     print(f"开始遍历文件：")
-    for i, file in enumerate(os.listdir(src_path), start=1):
-        print(f"{i}. {file}")
+    for file in os.listdir(src_path):
         fs.append(os.path.join(src_path, file))
-    print(f"共找到{len(fs)}个文件.")
+    print(f"共找到{len(fs)}个文件.顺序为：")
+    for i, f in enumerate(fs, start=1):
+        print(f"{i}. {f}")
     return fs

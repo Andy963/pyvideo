@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # coding:utf-8
 import os
+from time import gmtime, strftime
 
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from libs import timer, LOG, CPU_COUNT, transfer_sec
+from libs import timer, LOG, CPU_COUNT, cal_sec
 from libs.files import list_file
 
 
@@ -24,7 +25,7 @@ def rm_audio_from_video(v_path: str, output_path: str = './'):
     v_.close()
 
 
-def split_video(v_path, start=0, end=0, out_path=None, eq2=False):
+def split_video(v_path, out_path=None, start=0, end=0, eq2=False):
     """将视频切片
     :param v_path: 源视频地址
     :param start: 视频开始时间
@@ -33,18 +34,18 @@ def split_video(v_path, start=0, end=0, out_path=None, eq2=False):
     :param out_path: 输出视频地址
     :param eq2 : 是否2等分
     """
+    if start and isinstance(start, str):
+        start = cal_sec(start)
+    if end and isinstance(end, str):
+        end = cal_sec(end)
     v = VideoFileClip(v_path)
-    if isinstance(start, str):
-        start = transfer_sec(start)
-    if isinstance(end, str):
-        end = transfer_sec(end)
     if start and not end:
         v = v.subclip(start, v.duration)
-    if end and not start:
+    elif end and not start:
         if end > v.duration:
             end = v.duration
         v = v.subclip(0, end)
-    if start and end:
+    elif start and end:
         if end > v.duration:
             end = v.duration
         v = v.subclip(start, end)
@@ -58,8 +59,12 @@ def split_video(v_path, start=0, end=0, out_path=None, eq2=False):
     v.close()
 
 
+def split_video_by_ffmpeg():
+    pass
+
+
 @timer
-def combine_videos(src_path='videos', out_path=None):
+def combine_videos(src_path='videos', out_path=None, method="compose"):
     """将src目录下的文件合并成一个"""
     final_clips = []
     print('读取文件:')
@@ -72,11 +77,30 @@ def combine_videos(src_path='videos', out_path=None):
             F = False
         final_clips.append(VideoFileClip(file))
     print(f'读取完成，共{len(final_clips)}个文件，开始合成:')
-    final_video = concatenate_videoclips(final_clips)
+    final_video = concatenate_videoclips(final_clips, method=method)
     if '全集' not in out_path:
         out_path = f'{out_path}全集'
     out_path = f'./merged/{out_path}.mp4'
     final_video.write_videofile(out_path, preset='ultrafast', threads=CPU_COUNT, logger=LOG)
+
+
+@timer
+def combine_videos_by_ffmpeg(video_path='videos', out_path='全集.mp4', cuda=False):
+    files = []  # 文件列表
+    for file in os.listdir(video_path):
+        files.append(os.path.join(video_path, file))
+    data = 'file \'' + '\'\nfile \''.join(files) + '\''
+    f_name = 'list.txt'
+    out_path = os.path.join('merged', out_path)
+    with open(f_name, 'w', encoding='utf-8') as f:
+        f.write(data)
+    if cuda:
+        cmd = f'ffmpeg -f concat -safe 0 -i {f_name} -vcodec h264_nvenc  -threads 2 {out_path} -y'
+    else:
+        cmd = f'ffmpeg -f concat -safe 0 -i {f_name} -c copy {out_path} -y'
+    print(cmd)
+    os.system(cmd)
+    os.remove(f_name)
 
 
 def add_watermark(video_path, logo_path):

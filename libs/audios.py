@@ -31,8 +31,8 @@ def get_audio_from_video(v_path, a_path=None):
     """获取视频的音频"""
     v = VideoFileClip(v_path)
     if not a_path:
-        ext = os.path.splitext(v_path)[0]
-        f_name = f"{ext}.mp3"
+        name = os.path.splitext(v_path)[0]
+        f_name = f"{name}.wav"
         a_path = os.path.join(os.path.dirname(v_path), f_name)
     v.audio.write_audiofile(a_path, logger=LOG)
     v.close
