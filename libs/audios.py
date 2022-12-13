@@ -8,6 +8,7 @@ from moviepy.video.VideoClip import ImageClip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from libs import LOG, timer, CPU_COUNT, cal_sec
+from libs.files import save_filelist
 
 
 def transcode_audio(src_path, dst_ext='mp3'):
@@ -38,15 +39,20 @@ def get_audio_from_video(v_path, a_path=None):
     v.close
 
 
-def combine_audios(audios, out_path):
+def combine_audios(src_path, out_path):
     """
     合并音频
     """
-    av = []
-    for a in audios:
-        av.append(AudioFileClip(a))
-    fvs = concatenate_audioclips(av)
-    fvs.write_audiofile(out_path, logger=LOG)
+    files = save_filelist(src_path)
+    try:
+        cmd = f'ffmpeg -f concat -safe 0 -i list.txt -c copy {out_path}'
+        os.system(cmd)
+    except Exception as e:
+        av = []
+        for a in files:
+            av.append(AudioFileClip(a))
+        fvs = concatenate_audioclips(av)
+        fvs.write_audiofile(out_path, logger=LOG)
 
 
 def add_bg_ms(v_path, ms_path, out_path, v_start=0, v_end=None, ms_start=0, ms_end=None, v_has_ms=False):
@@ -105,18 +111,23 @@ def split_audio(src_path, dst_path, start=None, end=None):
     """
     分割音频
     """
-    a = AudioFileClip(src_path)
-    if start:
-        start = cal_sec(start)
-    if end:
-        end = cal_sec(end)
-    if start and not end:
-        a = a.subclip(start, a.duration)
-    if end and not start:
-        if end > a.duration:
-            end = a.duration
-        a = a.subclip(0, end)
-    if start and end:
-        a = a.subclip(start, end)
-    a.write_audiofile(dst_path, logger=LOG)
-    a.close()
+    try:
+        cmd = f'ffmpeg -i {src_path} -acodec copy -ss {start} -to {end} {dst_path}'
+        os.system(cmd)
+    except Exception as e:
+        print(e)
+        a = AudioFileClip(src_path)
+        if start:
+            start = cal_sec(start)
+        if end:
+            end = cal_sec(end)
+        if start and not end:
+            a = a.subclip(start, a.duration)
+        if end and not start:
+            if end > a.duration:
+                end = a.duration
+            a = a.subclip(0, end)
+        if start and end:
+            a = a.subclip(start, end)
+        a.write_audiofile(dst_path, logger=LOG)
+        a.close()

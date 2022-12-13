@@ -13,3 +13,15 @@ def list_file(src_path='audio'):
     for i, f in enumerate(fs, start=1):
         print(f"{i}. {f}")
     return fs
+
+
+def save_filelist(src_path):
+    """保存文件列表"""
+    files = []  # 文件列表
+    for file in os.listdir(src_path):
+        files.append(os.path.join(src_path, file))
+    data = 'file \'' + '\'\nfile \''.join(files) + '\''
+    f_name = 'list.txt'
+    with open(f_name, 'w', encoding='utf-8') as f:
+        f.write(data)
+    return files
