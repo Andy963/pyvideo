@@ -153,3 +153,25 @@ def split_audio(src_path, dst_path, start=None, end=None):
             a = a.subclip(start, end)
         a.write_audiofile(dst_path, logger=LOG)
         a.close()
+    finally:
+        if os.path.exists(src_path):
+            os.remove(src_path)
+
+
+def combine_audio_video(a_file: str, v_file: str, out_file: str):
+    """
+    通过ffmpeg将音频和视频合并
+    a_file:音频文件
+    v_file:视频文件
+    out_file:输出文件
+    """
+    try:
+        cmd = f"ffmpeg -i {a_file} -i {v_file} -y {out_file}"
+        os.system(cmd)
+    except Exception as e:
+        print(e)
+    finally:
+        if os.path.exists(v_file):
+            os.remove(v_file)
+            os.rename(out_file, v_file)
+        print('Done!')
