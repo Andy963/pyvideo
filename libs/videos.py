@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # coding:utf-8
 import os
+import random
 
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
@@ -125,3 +126,30 @@ def add_watermark(video_path, logo_path):
     compos = CompositeVideoClip([video, logo])
     compos.write_videofile(video_path, preset='ultrafast', threads=CPU_COUNT, logger=LOG)
     compos.close()
+
+
+def make_video(name: str, duration: int):
+    """
+    将图片生成指定时长的视频
+    """
+    list_img = list_file('mask')
+    count = len(list_img)
+    random.shuffle(list_img)
+    with open('list.txt', 'w', encoding='utf-8') as f:
+        for img in list_img:
+            f.write(f"file '{img}'\n")
+            d = random.randint(2, 5)
+            f.write(f"duration {d}\n")
+            duration -= d
+            if duration <= 0:
+                break
+    cmd = f"ffmpeg -y -f concat -safe 0 -i list.txt  -pix_fmt yuvj422p -vf scale=-1:1080 -loglevel error {name}"
+    try:
+        os.system(cmd)
+    except Exception as e:
+        cmd = 'ffmpeg -y -f concat -safe 0 -i list.txt -pix_fmt yuvj422p -vf scale=-1:1080 '
+        cmd += '-loglevel error "pad=ceil(iw/2)*2:ceil(ih/2)*2" {v_name}'
+        os.system(cmd)
+    finally:
+        if os.path.exists('list.txt'):
+            os.remove('list.txt')
