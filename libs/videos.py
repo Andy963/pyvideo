@@ -133,12 +133,11 @@ def make_video(name: str, duration: int):
     将图片生成指定时长的视频
     """
     list_img = list_file('mask')
-    count = len(list_img)
-    random.shuffle(list_img)
     with open('list.txt', 'w', encoding='utf-8') as f:
-        for img in list_img:
+        while True:
+            img = random.choice(list_img)
             f.write(f"file '{img}'\n")
-            d = random.randint(2, 5)
+            d = random.randint(3, 8)
             f.write(f"duration {d}\n")
             duration -= d
             if duration <= 0:
